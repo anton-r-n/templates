@@ -1,42 +1,54 @@
 'use strict';
 
 
-/**
- * Template engine adapted from:
- * Simple JavaScript Templating
- * by John Resig - http://ejohn.org/ - MIT Licensed
- * http://ejohn.org/blog/javascript-micro-templating/
- */
 (function(global) {
   var cache = {};
 
-  global.tpl = function tpl(str, data) {
-    // Figure out if we're getting a template, or if we need to
-    // load the template - and be sure to cache the result.
+  /**
+   * Micro template engine adapted from:
+   * Simple JavaScript Templating
+   * by John Resig - http://ejohn.org/ - MIT Licensed
+   * http://ejohn.org/blog/javascript-micro-templating/
+   *
+   * Use:
+   * <% expression %> for itnerpret expression
+   * <%= value %> for escaped value
+   * <%: value %> for raw vaule
+   */
+  global.tpl = function(str, data) {
     var fn = !/\W/.test(str) ?
         cache[str] = cache[str] ||
         tpl(document.getElementById(str).innerHTML) :
+        new Function('_', compose(str));
+    return arguments.length > 1 ? fn(data) : fn;
+  };
 
-        // Generate a reusable function that will serve as a template
-        // generator (and which will be cached).
-        new Function('obj',
-        'var p=[],print=function(){p.push.apply(p,arguments);};' +
+  function compose(str) {
+    var s = ("var p=[];p.push('" + str
+          .replace(/>\s*[\r\n\t]+\s*/mg, '>')
+          .replace(/\s*[\r\n\t]+\s*</mg, '<')
+          .replace(/\s*[\r\n\t]\s*/mg, ' ')
+          .replace(/<%/g, '\n')
+          .replace(/(.*%>)?(.*'.*)/g, apos)
+          .replace(/^:(.+)%>/mg, "',$1,'")
+          .replace(/^=(.+)%>/mg, "',tpl.esc($1),'")
+          .replace(/^(.+)%>/mg, "');$1p.push('")
+          .replace(/\n/g, '') + "');return p.join('');"
+        ).replace(/p.push\(''\);/g, '');
+    return s;
+  }
 
-        // Introduce the data as local variables using with(){}
-        "with(obj){p.push('" +
+  var entities = {
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;'};
 
-        // Convert the template into pure JavaScript
-        str
-          .replace(/[\r\t\n]/g, ' ')
-          .split('<%').join('\t')
-          .replace(/((^|%>)[^\t]*)'/g, '$1\r')
-          .replace(/\t=(.*?)%>/g, "',$1,'")
-          .split('\t').join("');")
-          .split('%>').join("p.push('")
-          .split('\r').join("\\'") +
-        "');}return p.join('');");
+  function replacement(s) { return entities[s]; };
 
-    // Provide some basic currying to the user
-    return data ? fn(data) : fn;
+  function apos($1, $2, $3) {
+    return /%>/.test($3) ?
+        $3 : $2 + $3.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  }
+
+  global.tpl.esc = function(string) {
+    return String(string).replace(/[&<>"']/g, replacement);
   };
 })(this);
