@@ -18,7 +18,7 @@
     results.appendChild(li);
   };
 
-  global.assert.total = function() {
+  global.assert.total = function(time) {
     results.insertAdjacentHTML('afterend', [
       '<div class="total">Of',
       passed + failed,
@@ -26,16 +26,21 @@
       failed,
       'failed,',
       passed,
-      'passed.</div>'].join(' ')
+      'passed',
+      time ? 'in ' + time + ' ms.' : '.',
+      '</div>'].join(' ')
     );
   };
 
 })(this);
 
 
+var start = new Date();
 assert('tpl', tpl);
 assert('tpl is function', typeof tpl === 'function');
 assert('tpl("<a>") returns function', typeof tpl('<a>') === 'function');
 assert('tpl("<a>", {}) returns string', typeof tpl('<a>', {}) === 'string');
 assert('tpl("<a\'>", {}) returns string', typeof tpl("<a'>", {}) === 'string');
 assert('tpl("<a\' \'>", {}) returns string', typeof tpl("<a' '>", {}) === 'string');
+var time = new Date() - start;
+assert.total(time);
