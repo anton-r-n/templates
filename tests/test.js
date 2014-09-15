@@ -26,8 +26,7 @@
       failed,
       'failed,',
       passed,
-      'passed',
-      time ? 'in ' + time + ' ms.' : '.',
+      time ? 'passed in ' + time + ' ms.' : 'passed.',
       '</div>'].join(' ')
     );
   };

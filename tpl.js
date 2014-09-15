@@ -11,9 +11,9 @@
    * http://ejohn.org/blog/javascript-micro-templating/
    *
    * Use:
-   * <% expression %> for itnerpret expression
-   * <%= value %> for escaped value
-   * <%: value %> for raw vaule
+   * <% expression %> for expression to interpret;
+   * <%= value %> for values to escape;
+   * <%: value %> for raw value (no further escaping).
    */
   global.tpl = function(str, data) {
     var fn = !/\W/.test(str) ?
@@ -38,16 +38,25 @@
     return s;
   }
 
-  var entities = {
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;'};
-
-  function replacement(s) { return entities[s]; };
-
+  /* Escape backslashes and apostrophes */
   function apos($1, $2, $3) {
     return /%>/.test($3) ?
         $3 : $2 + $3.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   }
 
+  var entities = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&apos;',
+  };
+
+  function replacement(s) {
+    return entities[s];
+  }
+
+  /* Escape predefined entities */
   global.tpl.esc = function(string) {
     return String(string).replace(/[&<>"']/g, replacement);
   };
